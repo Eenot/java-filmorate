@@ -13,7 +13,7 @@ import java.util.Map;
 
 @Controller
 @Slf4j
-public class InMemoryUserManager implements UserManager{
+public class InMemoryUserManager implements UserManager {
     private static int id = 0;
     private final Map<Integer, User> users = new HashMap<>();
 
