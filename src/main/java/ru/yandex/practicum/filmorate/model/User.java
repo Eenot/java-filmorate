@@ -8,7 +8,7 @@ import java.time.LocalDate;
 public class User {
 
     @Builder.Default
-    private int id = 0;
+    private int id;
     private String email;
     private String login;
     private String name;

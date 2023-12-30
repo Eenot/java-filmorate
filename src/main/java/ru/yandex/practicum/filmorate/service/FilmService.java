@@ -5,7 +5,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.List;
 
-public interface FilmManager {
+public interface FilmService {
     Film addFilm(Film film);
 
     Film updateFilm(Film film);

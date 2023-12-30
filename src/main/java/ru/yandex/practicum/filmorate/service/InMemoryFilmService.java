@@ -13,7 +13,7 @@ import java.util.Map;
 
 @Controller
 @Slf4j
-public class InMemoryFilmManager implements FilmManager {
+public class InMemoryFilmService implements FilmService {
     private static int filmId = 0;
     private final Map<Integer, Film> films = new HashMap<>();
     private static final int MAX_DESCRIPTION_LENGTH = 200;
