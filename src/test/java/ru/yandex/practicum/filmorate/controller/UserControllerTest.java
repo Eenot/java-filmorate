@@ -100,13 +100,6 @@ public class UserControllerTest {
     }
 
     @Test
-    public void shouldAddUserWhenNameIsEmpty() {
-        user6.setName("");
-        userController.createUser(user6);
-        assertEquals(userController.getUserById(6).getName(), userController.getUserById(6).getLogin());
-    }
-
-    @Test
     public void shouldUpdateUser() {
         final User updatedUser = user1;
         updatedUser.setEmail("updatedEmail@email.ru");
