@@ -143,7 +143,7 @@ public class UserControllerTest {
     @Test
     public void shouldGetUserWhenIdIsCorrect() {
         User expectedUser = user1;
-        User actualUser = userController.getUserById(1);
+        User actualUser = userController.getUserById(user1.getId());
         assertEquals(expectedUser, actualUser);
     }
 
