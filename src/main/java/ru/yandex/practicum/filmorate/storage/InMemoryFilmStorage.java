@@ -1,46 +1,58 @@
-package ru.yandex.practicum.filmorate.service;
+package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-@Controller
+@Component
 @Slf4j
-public class InMemoryFilmService implements FilmService {
-    private static int filmId = 0;
+public class InMemoryFilmStorage implements FilmStorage {
+    private static int id = 0;
     private final Map<Integer, Film> films = new HashMap<>();
     private static final int MAX_DESCRIPTION_LENGTH = 200;
     private static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895,12,28);
 
     @Override
-    public Film addFilm(Film film) {
+    public Film createFilm(Film film) {
+        if (films.containsKey(film.getId())) {
+            log.error("Фильм с id {} уже существует!", film.getId());
+            throw new ValidationException("Фильм с id " + film.getId() + " уже существует!");
+        }
         validateFilm(film);
-        film.setId(++filmId);
-        films.put(filmId, film);
+        film.setId(++id);
+        films.put(id,film);
         return film;
     }
 
     @Override
     public Film updateFilm(Film film) {
         if (!films.containsKey(film.getId())) {
-            log.error("Фильм с id {} не существует",film.getId());
-            throw new ValidationException("Фильм с id " + film.getId() + " не существует");
+            log.error("Фильм с id {} не существует!", film.getId());
+            throw new FilmNotFoundException("Фильм с id " + film.getId() + " не существует!");
         }
         validateFilm(film);
-        films.put(film.getId(),film);
+        films.put(film.getId(), film);
         return film;
     }
 
     @Override
-    public List<Film> getFilms() {
-        return new ArrayList<>(films.values());
+    public Film getFilmById(int filmId) {
+        if (!films.containsKey(filmId)) {
+            log.error("Фильм с id {} не существует!", filmId);
+            throw new FilmNotFoundException("Фильм с id " + filmId + " не существует!");
+        }
+        return this.films.get(filmId);
+    }
+
+    @Override
+    public Map<Integer, Film> getAllFilms() {
+        return this.films;
     }
 
     private void validateFilm(Film film) {
@@ -61,5 +73,4 @@ public class InMemoryFilmService implements FilmService {
             throw new ValidationException("Продолжительность фильма должна быть положительной");
         }
     }
-
 }

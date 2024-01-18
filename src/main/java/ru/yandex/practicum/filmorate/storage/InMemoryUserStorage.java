@@ -1,35 +1,38 @@
-package ru.yandex.practicum.filmorate.service;
+package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-@Controller
+@Component
 @Slf4j
-public class InMemoryUserManager implements UserManager {
-    private static int id = 0;
+public class InMemoryUserStorage implements UserStorage {
+    private static int userId = 0;
     private final Map<Integer, User> users = new HashMap<>();
 
     @Override
     public User createUser(User user) {
+        if (users.containsKey(user.getId())) {
+            log.error("Пользователь с id {} уже существует!", user.getId());
+            throw new ValidationException("Пользователь с id " + user.getId() + " уже существует!");
+        }
         validateUser(user);
-        user.setId(++id);
-        users.put(id,user);
+        user.setId(++userId);
+        users.put(userId, user);
         return user;
     }
 
     @Override
     public User updateUser(User user) {
         if (!users.containsKey(user.getId())) {
-            log.error("Пользователь с id {} не существует", user.getId());
-            throw new ValidationException("Пользователь с id " + user.getId() + " не существует");
+            log.error("Пользователь с id {} не существует!", user.getId());
+            throw new UserNotFoundException("Пользователь с id " + user.getId() + " не существует!");
         }
         validateUser(user);
         users.put(user.getId(), user);
@@ -37,8 +40,17 @@ public class InMemoryUserManager implements UserManager {
     }
 
     @Override
-    public List<User> getUsers() {
-        return new ArrayList<>(users.values());
+    public User getUserById(int userId) {
+        if (!users.containsKey(userId)) {
+            log.error("Пользователь с id {} не существует!", userId);
+            throw new UserNotFoundException("Пользователь с id " + userId + " не существует!");
+        }
+        return this.users.get(userId);
+    }
+
+    @Override
+    public Map<Integer, User> getAllUsers() {
+        return this.users;
     }
 
     private void validateUser(User user) {
@@ -59,6 +71,5 @@ public class InMemoryUserManager implements UserManager {
             throw new ValidationException("Дата рождения пользователя некорректна(поле пустое или дата позже " +
                     "текущего момента)");
         }
-
     }
 }
