@@ -37,7 +37,7 @@ public class FilmController {
     public Film updateFilm(@NotNull @RequestBody Film film) {
         log.info("Получен PUT-запрос: {}",film);
         Film response = filmService.updateFilm(film);
-        log.info("Обновлена информация о фильма: {}",film.toString());
+        log.info("Обновлена информация о фильме: {}", response.getName());
         return response;
     }
 
@@ -45,7 +45,7 @@ public class FilmController {
     public Film getFilmById(@PathVariable("id") int filmId) {
         log.info("Получен GET-запрос: фильм с id \"{}\"", filmId);
         Film response = filmService.getFilmById(filmId);
-        log.info("Фильм с id \"{}\" : \"{}\"", filmId, response.toString());
+        log.info("Фильм с id \"{}\" : \"{}\"", filmId, response.getName());
         return response;
     }
 
@@ -53,8 +53,7 @@ public class FilmController {
     public Set<Long> addLike(@PathVariable("id") int filmId,
                              @PathVariable("userId") int userId) {
         log.info("Получен PUT-запрос: пользователь с id \"{}\" оценил фильм с id \"{}\"", userId, filmId);
-        filmService.addLike(filmId, userId);
-        Set<Long> response = filmService.getAllLikes(filmId);
+        Set<Long> response = filmService.addLike(filmId, userId);
         log.info("Обновлён список оценок фильма с id \"{}\". Фильм оценили: {}", filmId, response);
         return response;
     }

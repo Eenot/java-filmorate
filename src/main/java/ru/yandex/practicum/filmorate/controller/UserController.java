@@ -54,18 +54,14 @@ public class UserController {
     public Set<Long> addFriend(@PathVariable("id") int userId,
                                @PathVariable("friendId") int friendId) {
         log.info("Получен PUT-запрос: пользователь \"{}\" добавил друга \"{}\"", userId, friendId);
-        Set<Long> response = userService.addFriend(userId,friendId);
-        log.info("Пользователь с id {} обновил список друзей: {}", userId, response);
-        return response;
+        return userService.addFriend(userId,friendId);
     }
 
     @DeleteMapping("{id}/friends/{friendId}")
     public Set<Long> removeFriend(@PathVariable("id") int userId,
                                   @PathVariable("friendId") int friendId) {
         log.info("Получен DELETE-запрос: пользователь \"{}\" удалил друга \"{}\"", userId, friendId);
-        Set<Long> response = userService.removeFriend(userId, friendId);
-        log.info("Пользователь {} обновил список друзей: {}", userId, response);
-        return response;
+        return userService.removeFriend(userId, friendId);
     }
 
     @GetMapping("{id}/friends")
