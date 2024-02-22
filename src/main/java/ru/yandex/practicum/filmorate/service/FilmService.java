@@ -12,7 +12,6 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.util.*;
 import java.util.stream.Collectors;
 
-
 @Service
 @Slf4j
 public class FilmService {
