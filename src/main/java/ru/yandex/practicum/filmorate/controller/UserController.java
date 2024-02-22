@@ -23,21 +23,21 @@ public class UserController {
     @GetMapping
     public List<User> getUsers() {
         log.info("Количество пользователей: {}", userService.getAllUsers().size());
-        return userService.getAllUsers();
+        return userService.getUserStorage().getAllUsers();
     }
 
     @PostMapping
     public User createUser(@NotNull @RequestBody User user) {
         log.info("Получен POST-запрос: {}", user);
-        User respone = userService.createUser(user);
+        User response = userService.getUserStorage().createUser(user);
         log.info("Добавлен пользователь: {}", user.toString());
-        return respone;
+        return response;
     }
 
     @PutMapping
     public User updateUser(@NotNull @RequestBody User user) {
         log.info("Получен PUT-запрос: {}", user);
-        User response = userService.updateUser(user);
+        User response = userService.getUserStorage().updateUser(user);
         log.info("Обновлён пользователь: {}", user.toString());
         return response;
     }
@@ -45,20 +45,20 @@ public class UserController {
     @GetMapping("{id}")
     public User getUserById(@PathVariable("id") Integer userId) {
         log.info("Получен GET-запрос: пользователь с id \"{}\"", userId);
-        User response = userService.getUserById(userId);
+        User response = userService.getUserStorage().getUserById(userId);
         log.info("Пользователь с id \"{}\" : \"{}\"", userId, response.toString());
         return response;
     }
 
     @PutMapping("{id}/friends/{friendId}")
-    public Set<Long> addFriend(@PathVariable("id") int userId,
+    public User addFriend(@PathVariable("id") int userId,
                                @PathVariable("friendId") int friendId) {
         log.info("Получен PUT-запрос: пользователь \"{}\" добавил друга \"{}\"", userId, friendId);
         return userService.addFriend(userId,friendId);
     }
 
     @DeleteMapping("{id}/friends/{friendId}")
-    public Set<Long> removeFriend(@PathVariable("id") int userId,
+    public User removeFriend(@PathVariable("id") int userId,
                                   @PathVariable("friendId") int friendId) {
         log.info("Получен DELETE-запрос: пользователь \"{}\" удалил друга \"{}\"", userId, friendId);
         return userService.removeFriend(userId, friendId);

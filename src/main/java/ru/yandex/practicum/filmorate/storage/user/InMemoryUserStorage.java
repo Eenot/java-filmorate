@@ -1,14 +1,16 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exception.SmthNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 @Component
 @Slf4j
@@ -30,10 +32,7 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User updateUser(User user) {
-        if (!users.containsKey(user.getId())) {
-            log.error("Пользователь с id {} не существует!", user.getId());
-            throw new UserNotFoundException("Пользователь с id " + user.getId() + " не существует!");
-        }
+        checkUserId(userId);
         validateUser(user);
         users.put(user.getId(), user);
         return user;
@@ -41,16 +40,56 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User getUserById(int userId) {
-        if (!users.containsKey(userId)) {
-            log.error("Пользователь с id {} не существует!", userId);
-            throw new UserNotFoundException("Пользователь с id " + userId + " не существует!");
-        }
-        return this.users.get(userId);
+        checkUserId(userId);
+        return users.get(userId);
     }
 
     @Override
-    public Map<Integer, User> getAllUsers() {
-        return this.users;
+    public List<User> getAllUsers() {
+       return new ArrayList<>(users.values());
+    }
+
+    @Override
+    public User addFriend(int userId, int friendId) {
+        checkUserId(userId);
+        checkUserId(friendId);
+        User user1 = getUserById(userId);
+        User user2 = getUserById(friendId);
+
+        user1.getFriends().add(friendId);
+        user2.getFriends().add(userId);
+        log.info("Пользователь с id={} добавлен в список друзей пользователя с id={}", friendId, userId);
+        return user1;
+    }
+
+    @Override
+    public User removeFriend(int userId, int friendId) {
+        checkUserId(userId);
+        checkUserId(friendId);
+        User user1 = getUserById(userId);
+        User user2 = getUserById(friendId);
+
+        if (!user1.getFriends().contains(friendId)) {
+            log.info("Пользователя с id={} нет в списке друзей пользователя с id={}", friendId, userId);
+            throw new SmthNotFoundException("Пользователя с id=" + friendId + " нет в списке друзей пользователя с id=" + userId);
+        }
+
+        user1.getFriends().remove(friendId);
+        user2.getFriends().remove(userId);
+        log.info("Пользователь с id={} добавлен в список друзей пользователя с id={}", friendId, userId);
+        return user1;
+    }
+
+    @Override
+    public List<Integer> getFriends(int id) {
+        return new ArrayList<>(getUserById(id).getFriends());
+    }
+
+    private void checkUserId(int userId) {
+        if (!users.containsKey(userId)) {
+            log.error("Пользователь с id {} не существует!", userId);
+            throw new SmthNotFoundException("Пользователь с id " + userId + " не существует!");
+        }
     }
 
     private void validateUser(User user) {

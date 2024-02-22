@@ -1,11 +1,11 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -15,68 +15,55 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
 
+    @Autowired
+    public UserService(@Qualifier("UserDbStorage") UserStorage userStorage) {
+        this.userStorage = userStorage;
+    }
+
+    public UserStorage getUserStorage() {
+        return userStorage;
+    }
+
     public User createUser(User user) {
-        return this.userStorage.createUser(user);
+        return userStorage.createUser(user);
     }
 
     public User updateUser(User user) {
-        return this.userStorage.updateUser(user);
+        return userStorage.updateUser(user);
     }
 
     public User getUserById(int userId) {
-        return this.userStorage.getUserById(userId);
+        return userStorage.getUserById(userId);
     }
 
     public List<User> getAllUsers() {
-        return new ArrayList<>(this.userStorage.getAllUsers().values());
+        return new ArrayList<>(userStorage.getAllUsers());
     }
 
-    public Set<Long> addFriend(int userId, int friendId) {
-        checkUsersIds(userId, friendId);
-        userStorage.getUserById(userId).addFriend(friendId);
-        userStorage.getUserById(friendId).addFriend(userId);
-        return userStorage.getUserById(userId).getFriends();
+    public User addFriend(int userId, int friendId) {
+        return userStorage.addFriend(userId, friendId);
     }
 
-    public Set<Long> removeFriend(int userId, int friendId) {
-        checkUsersIds(userId, friendId);
-        userStorage.getUserById(userId).removeFriend(friendId);
-        userStorage.getUserById(friendId).removeFriend(userId);
-        return userStorage.getUserById(userId).getFriends();
+    public User removeFriend(int userId, int friendId) {
+        return userStorage.removeFriend(userId, friendId);
     }
 
     public List<User> getUsersFriends(int userId) {
-        Set<Long> friendsIds = userStorage.getUserById(userId).getFriends();
-        return userStorage.getAllUsers().values().stream()
-                .filter(user -> friendsIds.contains((long) user.getId()))
+        return userStorage.getFriends(userId).stream()
+                .map(userStorage::getUserById)
                 .collect(Collectors.toList());
     }
 
     public List<User> getMutualFriends(int userId, int otherId) {
-        checkUsersIds(userId, otherId);
-        Set<Long> userFriends = userStorage.getUserById(userId).getFriends();
-        Set<Long> otherUserFriends = userStorage.getUserById(otherId).getFriends();
+        Set<Integer> friends = new HashSet<>(userStorage.getFriends(userId));
+        Set<Integer> otherFriends = new HashSet<>(userStorage.getFriends(otherId));
 
-        Set<Long> coincidences = new HashSet<>(userFriends);
-        coincidences.retainAll(otherUserFriends);
-
-        return userStorage.getAllUsers().values().stream()
-                .filter(user -> coincidences.contains((long) user.getId()))
+        friends.retainAll(otherFriends);
+        return friends.stream()
+                .map(userStorage::getUserById)
                 .collect(Collectors.toList());
-    }
-
-    private void checkUsersIds(int userId, int friendId) {
-        if (!userStorage.getAllUsers().containsKey(userId)) {
-            log.error("Пользователь с id {} не существует!", userId);
-            throw new UserNotFoundException(String.format("Пользователь с id \"%s\" не существует!", userId));
-        }
-        if (!userStorage.getAllUsers().containsKey(friendId)) {
-            log.error("Пользователь с id {} не существует!", friendId);
-            throw new UserNotFoundException(String.format("Пользователь с id \"%s\" не существует!", friendId));
-        }
     }
 }
