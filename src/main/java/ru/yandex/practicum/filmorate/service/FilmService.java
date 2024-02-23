@@ -19,34 +19,14 @@ public class FilmService {
     private final UserStorage userStorage;
 
     @Autowired
-    public FilmService(@Qualifier("FilmDbStorage") FilmStorage filmStorage,
-                       @Qualifier("UserDbStorage") UserStorage userStorage) {
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
+                       @Qualifier("userDbStorage") UserStorage userStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
     }
 
     public FilmStorage getFilmStorage() {
         return filmStorage;
-    }
-
-    public Film createFilm(Film film) {
-        return filmStorage.createFilm(film);
-    }
-
-    public Film updateFilm(Film film) {
-        return filmStorage.updateFilm(film);
-    }
-
-    public Film getFilmById(int filmId) {
-        return filmStorage.getFilmById(filmId);
-    }
-
-    public List<Film> getAllFilms() {
-        return new ArrayList<>(filmStorage.getAllFilms());
-    }
-
-    public Set<Integer> getAllLikes(int filmId) {
-        return filmStorage.getFilmById(filmId).getLikes();
     }
 
     public Film addLike(int filmId, int userId) {
@@ -56,6 +36,7 @@ public class FilmService {
     }
 
     public Film removeLike(int filmId, int userId) {
+        userStorage.getUserById(userId);
         if (!filmStorage.getFilmById(filmId).getLikes().contains(userId)) {
             log.info("Пользователь с id {} не ставил лайк фильму с id {}", userId, filmId);
             throw new SmthNotFoundException("Пользователь с id " + userId + " не ставил лайк фильму с id " + filmId);

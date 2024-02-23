@@ -6,8 +6,6 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
-import javax.validation.constraints.NotNull;
-
 import java.time.LocalDate;
 import java.util.List;
 
@@ -23,12 +21,12 @@ public class UserController {
 
     @GetMapping
     public List<User> getUsers() {
-        log.info("Количество пользователей: {}", userService.getAllUsers().size());
+        log.info("Количество пользователей: {}", userService.getUserStorage().getAllUsers().size());
         return userService.getUserStorage().getAllUsers();
     }
 
     @PostMapping
-    public User createUser(@NotNull @RequestBody User user) {
+    public User createUser(@RequestBody User user) {
         log.info("Получен POST-запрос: {}", user);
         validateUser(user);
         User response = userService.getUserStorage().createUser(user);
@@ -37,8 +35,9 @@ public class UserController {
     }
 
     @PutMapping
-    public User updateUser(@NotNull @RequestBody User user) {
+    public User updateUser(@RequestBody User user) {
         log.info("Получен PUT-запрос: {}", user);
+        validateUser(user);
         User response = userService.getUserStorage().updateUser(user);
         log.info("Обновлён пользователь: {}", user.toString());
         return response;

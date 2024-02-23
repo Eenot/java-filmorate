@@ -24,7 +24,7 @@ import java.util.TreeSet;
 
 @Component
 @Slf4j
-@Qualifier("FilmDbStorage")
+@Qualifier("filmDbStorage")
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
     private static final int MAX_DESCRIPTION_LENGTH = 200;
@@ -129,6 +129,8 @@ public class FilmDbStorage implements FilmStorage {
         film.getGenres().addAll(findGenreById(film.getId()));
         return film;
     }
+
+
 
     private Set<Genre> findGenreById(int id) {
         String sqlQuery = "SELECT g.genre_id, g.genre_name FROM film_genre AS fg " +

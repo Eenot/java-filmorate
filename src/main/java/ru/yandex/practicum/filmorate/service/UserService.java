@@ -19,28 +19,12 @@ public class UserService {
     private final UserStorage userStorage;
 
     @Autowired
-    public UserService(@Qualifier("UserDbStorage") UserStorage userStorage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
     public UserStorage getUserStorage() {
         return userStorage;
-    }
-
-    public User createUser(User user) {
-        return userStorage.createUser(user);
-    }
-
-    public User updateUser(User user) {
-        return userStorage.updateUser(user);
-    }
-
-    public User getUserById(int userId) {
-        return userStorage.getUserById(userId);
-    }
-
-    public List<User> getAllUsers() {
-        return new ArrayList<>(userStorage.getAllUsers());
     }
 
     public User addFriend(int userId, int friendId) {
