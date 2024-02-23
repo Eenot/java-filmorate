@@ -52,20 +52,20 @@ public class FilmController {
     }
 
     @PutMapping("{id}/like/{userId}")
-    public Film addLike(@PathVariable("id") int filmId,
+    public Film addLike(@PathVariable("id") int id,
                              @PathVariable("userId") int userId) {
-        log.info("Получен PUT-запрос: пользователь с id \"{}\" оценил фильм с id \"{}\"", userId, filmId);
-        Film response = filmService.addLike(filmId, userId);
-        log.info("Обновлён список оценок фильма с id \"{}\".", filmId);
+        log.info("Получен PUT-запрос: пользователь с id \"{}\" оценил фильм с id \"{}\"", userId, id);
+        Film response = filmService.addLike(id, userId);
+        log.info("Обновлён список оценок фильма с id \"{}\".", id);
         return response;
     }
 
     @DeleteMapping("{id}/like/{userId}")
-    public Film removeLike(@PathVariable("id") int filmId,
+    public Film removeLike(@PathVariable("id") int id,
                                 @PathVariable("userId") int userId) {
-        log.info("Получен DELETE-запрос: пользователь с id \"{}\" убрал оценку фильма с id \"{}\"", userId, filmId);
-        log.info("Обновлён список оценок фильма с id \"{}\".", filmId);
-        return filmService.removeLike(filmId, userId);
+        log.info("Получен DELETE-запрос: пользователь с id \"{}\" убрал оценку фильма с id \"{}\"", userId, id);
+        log.info("Обновлён список оценок фильма с id \"{}\".", id);
+        return filmService.removeLike(id, userId);
     }
 
     @GetMapping("/popular")

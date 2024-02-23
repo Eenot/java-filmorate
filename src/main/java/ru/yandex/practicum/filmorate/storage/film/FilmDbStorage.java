@@ -10,14 +10,12 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.DuplicateDataException;
 import ru.yandex.practicum.filmorate.exception.SmthNotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -27,8 +25,6 @@ import java.util.TreeSet;
 @Qualifier("filmDbStorage")
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
-    private static final int MAX_DESCRIPTION_LENGTH = 200;
-    private static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895,12,28);
 
     @Autowired
     public FilmDbStorage(JdbcTemplate jdbcTemplate) {
@@ -38,7 +34,6 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film createFilm(Film film) {
-        validateFilm(film);
         int filmId = addFilmToDb(film);
         film.setId(filmId);
         String sqlQuery = "INSERT INTO film_genre (film_id, genre_id) VALUES (?,?)";
@@ -53,7 +48,6 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film updateFilm(Film film) {
         checkFilmId(film.getId());
-        validateFilm(film);
         String sqlQuery = "UPDATE films SET " +
                 "name=?, description=?, release_date=?, duration=?, mpa_id=? WHERE film_id=?";
         jdbcTemplate.update(
@@ -64,7 +58,7 @@ public class FilmDbStorage implements FilmStorage {
                 film.getDuration(),
                 film.getMpa().getId(),
                 film.getId());
-        String sqlQuery2 = "DELETE FROM film_genre WHERE film_id = ?";
+        String sqlQuery2 = "DELETE FROM film_genre WHERE film_id=?";
         jdbcTemplate.update(sqlQuery2, film.getId());
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
@@ -88,9 +82,9 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public void addLike(int filmId, int userId) {
+    public void addLike(int userId, int filmId) {
         checkFilmId(filmId);
-        String sqlQuery = "INSERT INTO likes (user_id, film_id) VALUES (?,?)";
+        String sqlQuery = "INSERT INTO likes (user_id, film_id) VALUES (?, ?)";
         try {
             jdbcTemplate.update(sqlQuery, userId, filmId);
         } catch (DuplicateKeyException e) {
@@ -100,7 +94,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public void removeLike(int filmId, int userId) {
+    public void removeLike(int userId, int filmId) {
         checkFilmId(filmId);
         String sqlQuery = "DELETE FROM likes WHERE user_id = ? AND film_id = ?";
         if (jdbcTemplate.update(sqlQuery,userId,filmId) == 0) {
@@ -166,25 +160,6 @@ public class FilmDbStorage implements FilmStorage {
         if (!dbContainsFilm(filmId)) {
             log.error("Фильм с id {} не существует!", filmId);
             throw new SmthNotFoundException("Фильм с id " + filmId + " не существует!");
-        }
-    }
-
-    private void validateFilm(Film film) {
-        if (film.getName() == null || film.getName().isBlank()) {
-            log.error("Название фильма не должно быть пустым");
-            throw new ValidationException("Название фильма не должно быть пустым");
-        }
-        if (film.getDescription().length() > MAX_DESCRIPTION_LENGTH) {
-            log.error("Максимальная длина описания: {}", MAX_DESCRIPTION_LENGTH);
-            throw new ValidationException("Максимальная длина описания: " + MAX_DESCRIPTION_LENGTH);
-        }
-        if (film.getReleaseDate().isBefore(MIN_RELEASE_DATE)) {
-            log.error("Дата релиза должна быть - не раньше {}", MIN_RELEASE_DATE);
-            throw new ValidationException("Дата релиза должна быть - не раньше " + MIN_RELEASE_DATE.toString());
-        }
-        if (film.getDuration() <= 0) {
-            log.error("Продолжительность фильма должна быть положительной");
-            throw new ValidationException("Продолжительность фильма должна быть положительной");
         }
     }
 }
