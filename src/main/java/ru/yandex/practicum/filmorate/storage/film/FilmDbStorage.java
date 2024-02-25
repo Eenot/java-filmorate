@@ -13,22 +13,25 @@ import ru.yandex.practicum.filmorate.exception.SmthNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 @Component
 @Slf4j
 @Qualifier("filmDbStorage")
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
+    private final GenreDbStorage genreDbStorage;
 
     @Autowired
     public FilmDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        this.genreDbStorage = new GenreDbStorage(jdbcTemplate);
     }
 
 
@@ -36,11 +39,9 @@ public class FilmDbStorage implements FilmStorage {
     public Film createFilm(Film film) {
         int filmId = addFilmToDb(film);
         film.setId(filmId);
-        String sqlQuery = "INSERT INTO film_genre (film_id, genre_id) VALUES (?,?)";
-        if (!film.getGenres().isEmpty()) {
-            for (Genre genre : film.getGenres()) {
-                jdbcTemplate.update(sqlQuery, filmId, genre.getId());
-            }
+        Set<Genre> genres = film.getGenres();
+        if (!genres.isEmpty()) {
+            insertFilmGenres(film.getId(), genres);
         }
         return film;
     }
@@ -62,8 +63,8 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(sqlQuery2, film.getId());
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            String sqlQuery3 = "INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)";
-            film.getGenres().forEach(genre -> jdbcTemplate.update(sqlQuery3, film.getId(), genre.getId()));
+            Set<Genre> genres = film.getGenres();
+            insertFilmGenres(film.getId(), genres);
         }
         return film;
     }
@@ -120,16 +121,8 @@ public class FilmDbStorage implements FilmStorage {
                         film.getId()
                 )
         );
-        film.getGenres().addAll(findGenreById(film.getId()));
+        film.getGenres().addAll(genreDbStorage.getGenresForFilm(film.getId()));
         return film;
-    }
-
-
-
-    private Set<Genre> findGenreById(int id) {
-        String sqlQuery = "SELECT g.genre_id, g.genre_name FROM film_genre AS fg " +
-                "JOIN genre AS g ON fg.genre_id=g.genre_id WHERE fg.film_id=?";
-        return new TreeSet<>(jdbcTemplate.query(sqlQuery, this::makeGenre, id));
     }
 
     private int addFilmToDb(Film film) {
@@ -149,11 +142,16 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-    private Genre makeGenre(ResultSet rs, int rowNum) throws SQLException {
-        return Genre.builder()
-                .id(rs.getInt("genre_id"))
-                .name(rs.getString("genre_name"))
-                .build();
+    private void insertFilmGenres(int filmId, Set<Genre> genres) {
+        String sqlQuery = "INSERT INTO film_genre (film_id, genre_id) VALUES (?,?)";
+        jdbcTemplate.batchUpdate(
+                sqlQuery,
+                genres,
+                genres.size(),
+                (PreparedStatement ps, Genre genre) -> {
+                    ps.setInt(1, filmId);
+                    ps.setInt(2, genre.getId());
+                });
     }
 
     private void checkFilmId(int filmId) {

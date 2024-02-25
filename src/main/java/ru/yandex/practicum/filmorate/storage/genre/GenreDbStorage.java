@@ -12,6 +12,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 @Component
@@ -43,6 +45,12 @@ public class GenreDbStorage implements GenreStorage {
             throw new SmthNotFoundException("Жанр с id " + id + " не существует!");
         }
         return genre;
+    }
+
+    public Set<Genre> getGenresForFilm(int filmId) {
+        String sqlQuery = "SELECT g.genre_id, g.genre_name FROM film_genre AS fg " +
+                "JOIN genre AS g ON fg.genre_id=g.genre_id WHERE fg.film_id=?";
+        return new TreeSet<>(jdbcTemplate.query(sqlQuery, this::makeGenre, filmId));
     }
 
     private Genre makeGenre(ResultSet rs, int rowNum) throws SQLException {

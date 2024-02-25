@@ -60,12 +60,14 @@ public class FilmDbStorageTest {
                 .name("Виктор")
                 .birthday(LocalDate.of(1992, 3, 12))
                 .build();
+        filmStorage.createFilm(film);
+        filmStorage.createFilm(film2);
+        userStorage.createUser(user);
     }
 
     @Test
-    public void shouldAddAndGetFilm() {
-        filmStorage.createFilm(film);
-        Film savedFilm = filmStorage.getFilmById(1);
+    public void shouldCreateFilm() {
+        Film savedFilm = filmStorage.getFilmById(film.getId());
 
         assertThat(savedFilm)
                 .isNotNull()
@@ -75,9 +77,9 @@ public class FilmDbStorageTest {
 
     @Test
     public void shouldThrowExceptionWhenIdIsIncorrect() {
-        final SmthNotFoundException exception = assertThrows(SmthNotFoundException.class, () -> filmStorage.getFilmById(1));
+        final SmthNotFoundException exception = assertThrows(SmthNotFoundException.class, () -> filmStorage.getFilmById(111));
 
-        assertEquals(exception.getMessage(), "Фильм с id 1 не существует!");
+        assertEquals(exception.getMessage(), "Фильм с id 111 не существует!");
     }
 
     @Test
@@ -95,23 +97,21 @@ public class FilmDbStorageTest {
 
     @Test
     public void shouldNotUpdateFilmWhenIdIsIncorrect() {
-        film2.setId(2);
+        film2.setId(111);
 
         final SmthNotFoundException exception = assertThrows(
                 SmthNotFoundException.class,
                 () -> filmStorage.updateFilm(film2)
         );
 
-        assertEquals(exception.getMessage(), "Фильм с id 2 не существует!");
+        assertEquals(exception.getMessage(), "Фильм с id 111 не существует!");
     }
 
     @Test
     public void shouldAddLike() {
-        filmStorage.createFilm(film);
-        userStorage.createUser(user);
-        filmStorage.addLike(1, 1);
+        filmStorage.addLike(film.getId(), user.getId());
 
-        Film savedFilm = filmStorage.getFilmById(1);
+        Film savedFilm = filmStorage.getFilmById(film.getId());
 
         assertNotNull(savedFilm);
         assertThat(savedFilm.getLikes()).isNotNull().isEqualTo(Set.of(1));
@@ -133,10 +133,8 @@ public class FilmDbStorageTest {
 
     @Test
     public void shouldRemoveLike() {
-        filmStorage.createFilm(film);
-        userStorage.createUser(user);
-        filmStorage.addLike(1, 1);
-        filmStorage.removeLike(1, 1);
+        filmStorage.addLike(film.getId(), user.getId());
+        filmStorage.removeLike(film.getId(), user.getId());
 
         Film savedFilm = filmStorage.getFilmById(1);
 
@@ -146,24 +144,29 @@ public class FilmDbStorageTest {
 
     @Test
     public void shouldThrowExceptionWhenTryingToRemoveNotExistedLike() {
-        filmStorage.createFilm(film);
-        userStorage.createUser(user);
         final SmthNotFoundException exception = assertThrows(
                 SmthNotFoundException.class,
                 () -> filmStorage.removeLike(film.getId(), user.getId())
         );
 
-        assertEquals(exception.getMessage(), "Пользователь с id 1 не ставил оценку фильму с id 1");
+        assertEquals(exception.getMessage(), "Пользователь с id " + user.getId() + " не ставил оценку фильму с id " + film.getId());
     }
 
     @Test
-    public void shouldGetFilms() {
-        filmStorage.createFilm(film);
-        filmStorage.createFilm(film2);
+    public void shouldGetAllFilms() {
         List<Film> savedFilms = filmStorage.getAllFilms();
 
         assertThat(savedFilms)
                 .isNotNull()
                 .isEqualTo(List.of(film,film2));
+    }
+
+    @Test
+    public void shouldGetFilmById() {
+        Film savedFilm = filmStorage.getFilmById(film.getId());
+
+        assertThat(savedFilm)
+                .isNotNull()
+                .isEqualTo(film);
     }
 }

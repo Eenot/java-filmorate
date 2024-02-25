@@ -2,11 +2,9 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -21,24 +19,23 @@ public class FilmController {
 
     @GetMapping
     public List<Film> getFilms() {
-        log.info("Количество фильмов: {}", filmService.getFilmStorage().getAllFilms().size());
-        return filmService.getFilmStorage().getAllFilms();
+        log.info("Количество фильмов: {}", filmService.getAllFilms().size());
+        return filmService.getAllFilms();
     }
 
     @PostMapping
     public Film addFilm(@RequestBody Film film) {
-        validate(film);
         log.info("Получен POST-запрос: {}", film);
-        Film response = filmService.getFilmStorage().createFilm(film);
+        Film response = filmService.createFilm(film);
         log.info("Добавлен фильм: {}", film.toString());
         return response;
     }
 
     @PutMapping
     public Film updateFilm(@RequestBody Film film) {
-        validate(film);
+        filmService.validateFilm(film);
         log.info("Получен PUT-запрос: {}",film);
-        Film response = filmService.getFilmStorage().updateFilm(film);
+        Film response = filmService.updateFilm(film);
         log.info("Обновлена информация о фильме: {}", response.getName());
         return response;
     }
@@ -46,7 +43,7 @@ public class FilmController {
     @GetMapping("{id}")
     public Film getFilmById(@PathVariable("id") int filmId) {
         log.info("Получен GET-запрос: фильм с id \"{}\"", filmId);
-        Film response = filmService.getFilmStorage().getFilmById(filmId);
+        Film response = filmService.getFilmById(filmId);
         log.info("Фильм с id \"{}\" : \"{}\"", filmId, response.getName());
         return response;
     }
@@ -74,29 +71,5 @@ public class FilmController {
         List<Film> response = filmService.getPopularFilms(count);
         log.info("Самые популярные фильмы: {}", response);
         return response;
-    }
-
-    private void validate(Film film) {
-        String msg;
-        if (film.getName() == null || film.getName().isBlank()) {
-            msg = "Имя фильма не может быть пустым.";
-            log.error(msg);
-            throw new ValidationException(msg);
-        }
-        if (film.getDescription().length() > 200) {
-            msg = "Описание не может быть длиной более 200 символов!.";
-            log.error(msg);
-            throw new ValidationException(msg);
-        }
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            msg = "Дата выхода фильма не может быть раньше чем 28.12.1895.";
-            log.error(msg);
-            throw new ValidationException(msg);
-        }
-        if (film.getDuration() <= 0) {
-            msg = "Продолжительность фильма должна быть положительной";
-            log.error(msg);
-            throw new ValidationException(msg);
-        }
     }
 }

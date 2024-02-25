@@ -48,7 +48,7 @@ public class UserDbStorageTest {
     }
 
     @Test
-    public void shouldAddAndGetUserById() {
+    public void shouldCreateUser() {
         userStorage.createUser(user);
 
         User savedUser = userStorage.getUserById(user.getId());
@@ -107,6 +107,18 @@ public class UserDbStorageTest {
         assertThat(savedUsers)
                 .isNotNull()
                 .isEqualTo(List.of(user,user2));
+    }
+
+    @Test
+    public void shouldGetUserById() {
+        userStorage.createUser(user);
+
+        User savedUser = userStorage.getUserById(user.getId());
+
+        assertThat(savedUser)
+                .isNotNull()
+                .usingRecursiveComparison()
+                .isEqualTo(user);
     }
 
     @Test
@@ -174,6 +186,30 @@ public class UserDbStorageTest {
         );
 
         assertEquals(exception.getMessage(), "Пользователя с id 1 нет в друзьях у пользователя с id 2");
+    }
+
+    @Test
+    public void shouldGetUserFriends() {
+        User user3 = User.builder()
+                .email("kirill@email.ru")
+                .login("kirillNew")
+                .name("Кирилл")
+                .birthday(LocalDate.of(2002, 5, 14))
+                .build();
+
+        userStorage.createUser(user);
+        userStorage.createUser(user2);
+        userStorage.createUser(user3);
+
+
+        userStorage.addFriend(user.getId(), user2.getId());
+        userStorage.addFriend(user.getId(), user3.getId());
+
+        List<Integer> savedFriends = userStorage.getFriends(user.getId());
+
+        assertThat(savedFriends)
+                .isNotNull()
+                .isEqualTo(List.of(2,3));
     }
 
 }
