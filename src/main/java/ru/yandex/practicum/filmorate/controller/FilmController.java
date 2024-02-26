@@ -5,9 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
-import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/films")
@@ -26,7 +24,7 @@ public class FilmController {
     }
 
     @PostMapping
-    public Film addFilm(@NotNull @RequestBody Film film) {
+    public Film addFilm(@RequestBody Film film) {
         log.info("Получен POST-запрос: {}", film);
         Film response = filmService.createFilm(film);
         log.info("Добавлен фильм: {}", film.toString());
@@ -34,7 +32,8 @@ public class FilmController {
     }
 
     @PutMapping
-    public Film updateFilm(@NotNull @RequestBody Film film) {
+    public Film updateFilm(@RequestBody Film film) {
+        filmService.validateFilm(film);
         log.info("Получен PUT-запрос: {}",film);
         Film response = filmService.updateFilm(film);
         log.info("Обновлена информация о фильме: {}", response.getName());
@@ -50,26 +49,24 @@ public class FilmController {
     }
 
     @PutMapping("{id}/like/{userId}")
-    public Set<Long> addLike(@PathVariable("id") int filmId,
+    public Film addLike(@PathVariable("id") int id,
                              @PathVariable("userId") int userId) {
-        log.info("Получен PUT-запрос: пользователь с id \"{}\" оценил фильм с id \"{}\"", userId, filmId);
-        Set<Long> response = filmService.addLike(filmId, userId);
-        log.info("Обновлён список оценок фильма с id \"{}\". Фильм оценили: {}", filmId, response);
+        log.info("Получен PUT-запрос: пользователь с id \"{}\" оценил фильм с id \"{}\"", userId, id);
+        Film response = filmService.addLike(id, userId);
+        log.info("Обновлён список оценок фильма с id \"{}\".", id);
         return response;
     }
 
     @DeleteMapping("{id}/like/{userId}")
-    public Set<Long> removeLike(@PathVariable("id") int filmId,
+    public Film removeLike(@PathVariable("id") int id,
                                 @PathVariable("userId") int userId) {
-        log.info("Получен DELETE-запрос: пользователь с id \"{}\" убрал оценку фильма с id \"{}\"", userId, filmId);
-        filmService.removeLike(filmId, userId);
-        Set<Long> response = filmService.getAllLikes(filmId);
-        log.info("Обновлён список оценок фильма с id \"{}\". Фильм оценили: {}", filmId, response);
-        return response;
+        log.info("Получен DELETE-запрос: пользователь с id \"{}\" убрал оценку фильма с id \"{}\"", userId, id);
+        log.info("Обновлён список оценок фильма с id \"{}\".", id);
+        return filmService.removeLike(id, userId);
     }
 
     @GetMapping("/popular")
-    public List<Film> getPopularFilms(@RequestParam(defaultValue = "10", required = false) int count) {
+    public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
         log.info("Получен GET-запрос: топ-{} фильмов по популярности.", count);
         List<Film> response = filmService.getPopularFilms(count);
         log.info("Самые популярные фильмы: {}", response);
